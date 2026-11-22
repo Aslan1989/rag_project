@@ -1,7 +1,8 @@
-from pathlib import Path
+# from pathlib import Path
 
 from google import genai
 
+import chromadb
 
 client = genai.Client()
 
@@ -14,45 +15,73 @@ def embed_text(text):
     return response.embeddings[0].values
 
 
-def cosine_similarity(a, b):
-    dot_product = sum(x * y for x, y in zip(a, b))
-    length_a = sum(x * x for x in a) ** 0.5
-    length_b = sum(y * y for y in b) ** 0.5
-    return dot_product / (length_a * length_b)
+# def cosine_similarity(a, b):
+#     dot_product = sum(x * y for x, y in zip(a, b))
+#     length_a = sum(x * x for x in a) ** 0.5
+#     length_b = sum(y * y for y in b) ** 0.5
+#     return dot_product / (length_a * length_b)
 
 
-file_path = Path(__file__).with_name("novasoft.txt")
-text = file_path.read_text(encoding="utf-8").strip()
+# file_path = Path(__file__).with_name("novasoft.txt")
+# file_text = file_path.read_text(encoding="utf-8").strip()
 
-documents = [
-    text,
-    "The company builds applications for dining businesses.",
-    "A cat is sleeping on the sofa.",
-    "The CEO of NovaSoft is Sarah Miller.",
-]
+# documents = file_text.split("\n\n")
+# print("Chunks loaded:", len(documents))
+
+# question = input("Ask a question about NovaSoft: ").strip()
+# question_vector = embed_text(question)
+
+# document_vectors = [embed_text(document) for document in documents]
+
+# chroma_client = chromadb.PersistentClient(path="./chroma_data")
+# collection = chroma_client.get_or_create_collection(
+#     name="novasoft",
+#     embedding_function=None,
+# )
+
+# collection.upsert(
+#     ids=[f"chunk-{index}" for index in range(len(documents))],
+#     documents=documents,
+#     embeddings=document_vectors,
+# )
+
+# print("Chunks saved in Chroma:", collection.count())
+
+# scores = [
+#     cosine_similarity(question_vector, document_vector)
+#     for document_vector in document_vectors
+# ]
+
+# top_k = 2
+# ranked_indices = sorted(
+#     range(len(scores)),
+#     key=lambda index: scores[index],
+#     reverse=True,
+# )
+
+# # for index in ranked_indices:
+# #     print(f"{scores[index]:.4f} | {documents[index]}")
+
+# selected_indices = ranked_indices[:top_k]
+# context = "\n".join(documents[index] for index in selected_indices)
+
+chroma_client = chromadb.PersistentClient(path="./chroma_data")
+collection = chroma_client.get_collection(
+    name="novasoft",
+    embedding_function=None,
+)
 
 question = input("Ask a question about NovaSoft: ").strip()
 question_vector = embed_text(question)
 
-document_vectors = [embed_text(document) for document in documents]
-scores = [
-    cosine_similarity(question_vector, document_vector)
-    for document_vector in document_vectors
-]
-
-top_k = 2
-ranked_indices = sorted(
-    range(len(scores)),
-    key=lambda index: scores[index],
-    reverse=True,
+results = collection.query(
+    query_embeddings=[question_vector],
+    n_results=2,
+    include=["documents"],
 )
 
-# for index in ranked_indices:
-#     print(f"{scores[index]:.4f} | {documents[index]}")
-
-selected_indices = ranked_indices[:top_k]
-context = "\n".join(documents[index] for index in selected_indices)
-
+matched_chunks = results["documents"][0]
+context = "\n".join(matched_chunks)
 print("\nRetrieved context:")
 print(context)
 
