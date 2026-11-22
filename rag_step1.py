@@ -66,7 +66,7 @@ best_index = scores.index(best_score)
 print("Best matching document:", documents[best_index])
 print("Similarity score:", best_score)
 
-question = "What does NovaSoft develop?"
+question = "Who is the CEO of NovaSoft?"
 
 question_response = client.models.embed_content(
     model="gemini-embedding-001",
@@ -91,13 +91,25 @@ print(f"{cosine_similarity(question_vector, vector):.4f} | {text}")
 print(f"{cosine_similarity(question_vector, second_vector):.4f} | {second_text}")
 print(f"{cosine_similarity(question_vector, third_vector):.4f} | {third_text}")
 
-rag_documents = [text, second_text, third_text]
+ceo_document = "The CEO of NovaSoft is Sarah Miller."
+
+ceo_response = client.models.embed_content(
+    model="gemini-embedding-001",
+    contents=ceo_document,
+)
+
+ceo_vector = ceo_response.embeddings[0].values
+
+rag_documents = [text, second_text, third_text, ceo_document]
 
 rag_scores = [
     cosine_similarity(question_vector, vector),
     cosine_similarity(question_vector, second_vector),
     cosine_similarity(question_vector, third_vector),
+    cosine_similarity(question_vector, ceo_vector),
 ]
+
+print(f"CEO document score: {rag_scores[3]:.4f}")
 
 best_index = rag_scores.index(max(rag_scores))
 context = rag_documents[best_index]
