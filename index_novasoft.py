@@ -34,6 +34,10 @@ collection.upsert(
     ids=[f"chunk-{index}" for index in range(len(chunks))],
     documents=chunks,
     embeddings=vectors,
+    metadatas=[
+        {"source": file_path.name, "paragraph": number}
+        for number, _ in enumerate(chunks, start=1)
+    ],
 )
 
 print("Chunks saved in Chroma:", collection.count())

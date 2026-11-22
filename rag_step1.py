@@ -77,16 +77,22 @@ question_vector = embed_text(question)
 results = collection.query(
     query_embeddings=[question_vector],
     n_results=2,
-    include=["documents"],
+    include=["documents", "metadatas"],
 )
 
 matched_chunks = results["documents"][0]
-context = "\n".join(matched_chunks)
+matched_metadata = results["metadatas"][0]
+
+context = "\n".join(
+    f"[{meta['source']}, paragraph {meta['paragraph']}] {chunk}"
+    for chunk, meta in zip(matched_chunks, matched_metadata)
+)
 print("\nRetrieved context:")
 print(context)
 
 prompt = f"""
 Answer the question using only the information in the context.
+Cite each factual claim using the source label exactly as it appears in the context.
 If the context does not contain the answer, say:
 "I don't know based on the provided context."
 
