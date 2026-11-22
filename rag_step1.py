@@ -87,31 +87,18 @@ def cosine_similarity(a, b):
 
     return dot_product / (length_a * length_b)
 
-
-print("\n--- Question compared with documents ---")
-print(f"{cosine_similarity(question_vector, vector):.4f} | {text}")
-print(f"{cosine_similarity(question_vector, second_vector):.4f} | {second_text}")
-print(f"{cosine_similarity(question_vector, third_vector):.4f} | {third_text}")
-
 ceo_document = "The CEO of NovaSoft is Sarah Miller."
 
-ceo_response = client.models.embed_content(
-    model="gemini-embedding-001",
-    contents=ceo_document,
-)
-
-ceo_vector = ceo_response.embeddings[0].values
+ceo_vector = embed_text(ceo_document)
 
 rag_documents = [text, second_text, third_text, ceo_document]
 
-rag_scores = [
-    cosine_similarity(question_vector, vector),
-    cosine_similarity(question_vector, second_vector),
-    cosine_similarity(question_vector, third_vector),
-    cosine_similarity(question_vector, ceo_vector),
-]
+document_vectors = [vector, second_vector, third_vector, ceo_vector]
 
-print(f"CEO document score: {rag_scores[3]:.4f}")
+rag_scores = [
+    cosine_similarity(question_vector, document_vector)
+    for document_vector in document_vectors
+]
 
 top_k = 2
 
@@ -120,6 +107,10 @@ ranked_indices = sorted(
     key=lambda index: rag_scores[index],
     reverse=True,
 )
+
+print("\n--- Documents ranked for this question ---")
+for index in ranked_indices:
+    print(f"{rag_scores[index]:.4f} | {rag_documents[index]}")
 
 selected_indices = ranked_indices[:top_k]
 
