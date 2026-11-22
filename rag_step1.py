@@ -65,3 +65,42 @@ best_index = scores.index(best_score)
 
 print("Best matching document:", documents[best_index])
 print("Similarity score:", best_score)
+
+question = "What does NovaSoft develop?"
+
+question_response = client.models.embed_content(
+    model="gemini-embedding-001",
+    contents=question,
+)
+
+question_vector = question_response.embeddings[0].values
+
+print("\nQuestion:", question)
+print("Question vector dimensions:", len(question_vector))
+
+def cosine_similarity(a, b):
+    dot_product = sum(x * y for x, y in zip(a, b))
+    length_a = sum(x * x for x in a) ** 0.5
+    length_b = sum(y * y for y in b) ** 0.5
+
+    return dot_product / (length_a * length_b)
+
+
+print("\n--- Question compared with documents ---")
+print(f"{cosine_similarity(question_vector, vector):.4f} | {text}")
+print(f"{cosine_similarity(question_vector, second_vector):.4f} | {second_text}")
+print(f"{cosine_similarity(question_vector, third_vector):.4f} | {third_text}")
+
+rag_documents = [text, second_text, third_text]
+
+rag_scores = [
+    cosine_similarity(question_vector, vector),
+    cosine_similarity(question_vector, second_vector),
+    cosine_similarity(question_vector, third_vector),
+]
+
+best_index = rag_scores.index(max(rag_scores))
+context = rag_documents[best_index]
+
+print("\nQuestion:", question)
+print("Retrieved context:", context)
