@@ -2,6 +2,13 @@ from google import genai
 
 client = genai.Client()
 
+def embed_text(text):
+    response = client.models.embed_content(
+        model="gemini-embedding-001",
+        contents=text,
+    )
+    return response.embeddings[0].values
+
 print("Gemini client created")
 
 text = "NovaSoft develops software for restaurants."
@@ -66,14 +73,9 @@ best_index = scores.index(best_score)
 print("Best matching document:", documents[best_index])
 print("Similarity score:", best_score)
 
-question = "Who is the CEO of NovaSoft?"
+question = input("Ask a question about NovaSoft: ").strip()
 
-question_response = client.models.embed_content(
-    model="gemini-embedding-001",
-    contents=question,
-)
-
-question_vector = question_response.embeddings[0].values
+question_vector = embed_text(question)
 
 print("\nQuestion:", question)
 print("Question vector dimensions:", len(question_vector))
@@ -111,8 +113,19 @@ rag_scores = [
 
 print(f"CEO document score: {rag_scores[3]:.4f}")
 
-best_index = rag_scores.index(max(rag_scores))
-context = rag_documents[best_index]
+top_k = 2
+
+ranked_indices = sorted(
+    range(len(rag_scores)),
+    key=lambda index: rag_scores[index],
+    reverse=True,
+)
+
+selected_indices = ranked_indices[:top_k]
+
+context = "\n".join(
+    rag_documents[index] for index in selected_indices
+)
 
 print("\nQuestion:", question)
 print("Retrieved context:", context)
