@@ -27,3 +27,12 @@ second_vector = second_response.embeddings[0].values
 
 print("Second vector dimensions:", len(second_vector))
 print("Second vector first 5 values:", second_vector[:5])
+
+dot_product = sum(a * b for a, b in zip(vector, second_vector))
+
+length_a = sum(a * a for a in vector) ** 0.5
+length_b = sum(b * b for b in second_vector) ** 0.5
+
+similarity = dot_product / (length_a * length_b)
+
+print(f"Cosine similarity: {similarity:.4f}")
