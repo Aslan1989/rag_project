@@ -1,0 +1,5 @@
+uv init --bare
+
+uv add google-genai
+
+uv run python -c "from google import genai; print('SDK import successful')"
