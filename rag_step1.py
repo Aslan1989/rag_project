@@ -104,3 +104,26 @@ context = rag_documents[best_index]
 
 print("\nQuestion:", question)
 print("Retrieved context:", context)
+
+prompt = f"""
+Answer the question using only the information in the context.
+If the context does not contain the answer, say:
+"I don't know based on the provided context."
+
+Context:
+{context}
+
+Question:
+{question}
+"""
+
+print("\nPrompt sent to Gemini:")
+print(prompt)
+
+answer_response = client.models.generate_content(
+    model="gemini-3.5-flash-lite",
+    contents=prompt,
+)
+
+print("\nGemini's answer:")
+print(answer_response.text)
