@@ -67,3 +67,23 @@ for record in page_records:
             break
 
 print("Chunks ready to index:", len(chunk_records))
+
+for record in chunk_records:
+    response = gemini.models.embed_content(
+        model="gemini-embedding-001",
+        contents=record["text"],
+    )
+
+    chunk_id = f"{record['source']}-p{record['page']}-c{record['chunk']}"
+    collection.upsert(
+        ids=[chunk_id],
+        documents=[record["text"]],
+        embeddings=[response.embeddings[0].values],
+        metadatas=[{
+            "source": record["source"],
+            "page": record["page"],
+            "chunk": record["chunk"],
+        }],
+    )
+
+print("Chunks saved in Chroma:", collection.count())

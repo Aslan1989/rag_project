@@ -67,7 +67,7 @@ def embed_text(text):
 
 chroma_client = chromadb.PersistentClient(path="./chroma_data")
 collection = chroma_client.get_collection(
-    name="novasoft_pdf",
+    name="novasoft_pdf_chunks",
     embedding_function=None,
 )
 
@@ -76,15 +76,26 @@ question_vector = embed_text(question)
 
 results = collection.query(
     query_embeddings=[question_vector],
-    n_results=2,
+    n_results=1,
     include=["documents", "metadatas"],
 )
 
 matched_chunks = results["documents"][0]
 matched_metadata = results["metadatas"][0]
 
+if matched_metadata:
+    first = matched_metadata[0]
+    next_number = first["chunk"] + 1
+    next_id = f"{first['source']}-p{first['page']}-c{next_number}"
+
+    if next_id not in results["ids"][0]:
+        neighbor = collection.get(ids=[next_id], include=["documents", "metadatas"])
+        if neighbor["ids"]:
+            matched_chunks.insert(1, neighbor["documents"][0])
+            matched_metadata.insert(1, neighbor["metadatas"][0])
+
 context = "\n".join(
-    f"[{meta['source']}, page {meta['page']}] {chunk}"
+    f"[{meta['source']}, page {meta['page']}, chunk {meta['chunk']}] {chunk}"
     for chunk, meta in zip(matched_chunks, matched_metadata)
 )
 print("\nRetrieved context:")
